@@ -231,7 +231,20 @@ def get_yam_robot(
     logging.debug(f"motor_states: {motor_states}")
 
     logging.info(f"current_pos: {[m.pos for m in motor_states]}")
+    # NOTE: skip wrap-around correction for the gripper (motor index 6). The arm
+    # joints are multi-turn and benefit from pulling an out-of-[-π, π] reading
+    # back into range. The gripper's valid raw range (e.g., [0.086, -5.20] for
+    # LINEAR_4310 or [0.0, -2.7] for CRANK_4310) extends past -π, so applying a
+    # 2π offset there shifts the JointMapper's logical frame onto motor positions
+    # the hardware cannot physically reach — PD then slams max torque into the
+    # mechanical stop trying to satisfy an impossible target (fingers push past
+    # the gripper base). gello-yam-data-collection's bundled i2rt doesn't apply
+    # any wrap-around correction at all; excluding the gripper here matches
+    # teleop's physical behavior so inference reaches the same gripper positions.
+    gripper_idx = 6 if with_gripper else None
     for idx, state in enumerate(motor_states):
+        if idx == gripper_idx:
+            continue
         if state.pos < -np.pi:
             logging.info(f"motor {idx} pos={state.pos:.3f}, offset -2π")
             motor_chain.motor_offset[idx] -= 2 * np.pi

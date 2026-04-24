@@ -82,7 +82,7 @@ class MotorChainRobot(Robot):
         enable_gripper_calibration: bool = False,  # whether to auto-detect gripper limits
         zero_gravity_mode: bool = True,
         # below are calibration parameters
-        test_torque: float = 0.5,  # test torque for gripper detection (Nm)
+        test_torque: float = 0.4,  # test torque for gripper detection (Nm). Matches the bundled i2rt in gello-yam-data-collection. Only affects gripper types that actually auto-calibrate (LINEAR_*). The teleop default (CRANK_4310) uses hardcoded limits (0.0, -2.7) and skips calibration entirely.
         test_duration: float = 2.0,  # max test duration for each direction (s)
         position_threshold: float = 0.01,  # minimum position change to consider motor still moving (rad)
         check_interval: float = 0.05,  # time interval between checks (s)
